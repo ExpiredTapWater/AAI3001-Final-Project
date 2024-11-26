@@ -113,7 +113,7 @@ def main():
                         # Send a notification if bad predictions are detected
                         failure_classes = detection_df["Class"].tolist()
                         send_ntfy_notification(
-                            topic="3d_printing_failures",
+                            topic="AAI3001-FinalProj", # GUYS USE THIS TOPIC
                             title="Bad Predictions Detected",
                             message=f"{len(detection_df)} failures detected: {', '.join(failure_classes)}."
                         )
