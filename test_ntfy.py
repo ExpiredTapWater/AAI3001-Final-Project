@@ -1,13 +1,19 @@
-import ntfy
+import requests
 
-# Test the NTFY notification functionality
 try:
-    ntfy.notify(
-        topic="AAI3001-FinalProj",  # Use the exact topic name as in the app
-        title="Test Notification",
-        message="This is a test notification.",
-        priority="high"
+    topic = "AAI3001-FinalProj"
+    title = "Notification Test"
+    message = "Go and look at your printer please!"
+
+    response = requests.post(
+        f"https://ntfy.sh/{topic}",  # Topic directly in the URL
+        headers={"Title": title},  # Notification title
+        data=message  # Notification message
     )
-    print("Notification sent successfully!")
+
+    if response.status_code == 200:
+        print("Notification sent successfully!")
+    else:
+        print(f"Failed to send notification: {response.status_code}")
 except Exception as e:
-    print(f"Failed to send notification: {e}")
+    print(f"Error sending notification: {e}")

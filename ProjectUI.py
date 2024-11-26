@@ -6,6 +6,7 @@ import io
 import os
 import ntfy
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+import requests
 
 # Load the YOLO11 model
 def load_model():
@@ -16,15 +17,18 @@ def load_model():
 # Send notifications using ntfy
 def send_ntfy_notification(topic, title, message):
     try:
-        ntfy.notify(
-            topic=topic,
-            title=title,
-            message=message,
-            priority="high"
+        response = requests.post(
+            f"https://ntfy.sh/{topic}",
+            headers={"Title": title},
+            data=message
         )
+        if response.status_code == 200:
+            st.success("Notification sent successfully!")
+        else:
+            st.error(f"Failed to send notification: {response.status_code}")
     except Exception as e:
-        st.error(f"Failed to send notification: {e}")
-
+        st.error(f"Error sending notification: {e}")
+        
 # Predict failure rate
 def predict_failure_rate(image, model):
     # Perform inference
