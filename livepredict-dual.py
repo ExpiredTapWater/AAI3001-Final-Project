@@ -92,8 +92,8 @@ def process_frame(frame):
     color_depth_bgr = cv2.cvtColor(color_depth, cv2.COLOR_RGB2BGR)
 
     # Run YOLOv8 inference on the original frame
-    rgb_results = rgb_model.predict(image, imgsz=(384, 640))
-    depth_results = depth_model.predict(image, imgsz=(384, 640))
+    rgb_results = rgb_model.predict(image, imgsz=(384, 640), verbose=False)
+    depth_results = depth_model.predict(image, imgsz=(384, 640), verbose=False)
     
     # Draw bounding boxes directly on the depth map
     for result in rgb_results:

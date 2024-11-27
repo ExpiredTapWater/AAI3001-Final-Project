@@ -31,7 +31,7 @@ while cap.isOpened():
         
         # With Resize
         image = cv2.resize(frame, (640, 384))
-        results = model.predict(image, imgsz=(384,640))
+        results = model.predict(image, imgsz=(384,640), verbose=False)
 
         # Visualize the results on the frame
         annotated_frame = results[0].plot()
