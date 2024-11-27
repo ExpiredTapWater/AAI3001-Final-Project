@@ -5,6 +5,10 @@ import cv2
 import os
 import tempfile
 import requests
+import time 
+
+# Global variable to track the last notification time
+last_notification_time = 0 
 
 # Load the YOLO model
 def load_model():
@@ -28,7 +32,9 @@ def send_ntfy_notification(topic, title, message):
         st.error(f"Error sending notification: {e}")
 
 # Process video for YOLO detection
-def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4):
+def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4, failure_confirmation_frames=3, cooldown_seconds=12):
+    global last_notification_time
+
     cap = cv2.VideoCapture(video_path)
 
     if not cap.isOpened():
@@ -53,17 +59,16 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
     # Placeholder for dynamic information update
     info_placeholder = st.empty()
 
-    # **Progress bar placeholder (above video)**
+    # Progress bar placeholder
     progress_bar = st.progress(0)
 
     # Placeholder for displaying the video frames in Streamlit
     video_placeholder = st.empty()
 
-    # Initial display of resolution, FPS, and total frames
     info_placeholder.write(f"Resolution: {frame_width}x{frame_height}, FPS: {fps}, Total Frames: {total_frames}")
 
     frame_count = 0
-    detection_history = []
+    failure_detected_in_last_frames = 0  # Counter for consecutive frames with failure detected
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -86,6 +91,7 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
 
         detections = results[0].boxes
 
+        failure_detected = False
         if detections:
             for box in detections:
                 cls = int(box.cls[0])
@@ -93,16 +99,34 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
                 confidence = box.conf[0].item()
 
                 # Apply confidence threshold and filter by class
-                if class_name == "failure" and confidence >= confidence_threshold:
-                    st.write(f"Frame {frame_count}: Detected {class_name} with confidence {confidence:.2f}")
-                    detection_history.append(True)
-                else:
-                    detection_history.append(False)
+                if class_name == "purge" and confidence >= confidence_threshold:
+                    failure_detected = True
+                    break
+
+        # Update the failure detection counter
+        if failure_detected:
+            failure_detected_in_last_frames += 1
+        else:
+            failure_detected_in_last_frames = 0
+
+        # Send notification if failure is detected in consecutive frames and cooldown period has passed
+        current_time = time.time()
+        if (
+            failure_detected_in_last_frames >= failure_confirmation_frames
+            and current_time - last_notification_time >= cooldown_seconds
+        ):
+            send_ntfy_notification(
+                topic="AAI3001-FinalProj",
+                title="3D Printing Failure Detected",
+                message=f"Failure detected consistently in {failure_detected_in_last_frames} consecutive frames. Current frame: {frame_count}."
+            )
+            # Update the last notification time
+            last_notification_time = current_time
 
         # Save the annotated frame to the output video
         out.write(annotated_frame)
 
-        # **Update the progress bar**
+        # Update the progress bar
         progress = frame_count / total_frames
         progress_bar.progress(progress)
 
@@ -111,15 +135,6 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
 
         # Update the information (frame count / total frames)
         info_placeholder.write(f"Resolution: {frame_width}x{frame_height}, FPS: {fps}, Processed Frames: {frame_count}/{total_frames}")
-
-        # Confirm failure only if detected in 3 consecutive frames
-        if len(detection_history) >= 3 and sum(detection_history[-3:]) >= 3:
-            send_ntfy_notification(
-                topic="AAI3001-FinalProj",
-                title="3D Printing Failure Detected",
-                message=f"Failure detected consistently around frame {frame_count}."
-            )
-            detection_history = []  # Reset after notification
 
     cap.release()
     out.release()
@@ -165,6 +180,27 @@ def main():
             with display_placeholder.container():
                 st.image(image, caption="Uploaded Image", use_container_width=True)
                 st.image(annotated_image, caption="Prediction with Annotations", use_container_width=True)
+
+            # Check for detections and send notification if "failure" is detected
+            detections = results[0].boxes
+            failure_detected = False
+            if detections:
+                for box in detections:
+                    cls = int(box.cls[0])
+                    class_name = results[0].names[cls]
+                    confidence = box.conf[0].item()
+                    if class_name == "failure" and confidence >= 0.3:
+                        failure_detected = True
+                        st.write(f"Detected {class_name} with confidence {confidence:.2f}")
+                        send_ntfy_notification(
+                            topic="AAI3001-FinalProj",
+                            title="3D Printing Failure Detected",
+                            message="Failure detected in the uploaded image."
+                        )
+                        break
+
+            if not failure_detected:
+                st.info("No failures detected in the image.")
 
             # Save the annotated image to a temporary file
             temp_image_path = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg").name
