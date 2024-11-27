@@ -41,11 +41,6 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    # Display video properties
-    st.info(
-        f"Resolution: {frame_width}x{frame_height}, FPS: {fps}, Total Frames: {total_frames}"
-    )
-
     # Create a temporary file for saving the processed video
     temp_output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -55,8 +50,17 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
         st.error("Failed to initialize video writer!")
         return
 
+    # Placeholder for dynamic information update
+    info_placeholder = st.empty()
+
+    # **Progress bar placeholder (above video)**
+    progress_bar = st.progress(0)
+
     # Placeholder for displaying the video frames in Streamlit
     video_placeholder = st.empty()
+
+    # Initial display of resolution, FPS, and total frames
+    info_placeholder.write(f"Resolution: {frame_width}x{frame_height}, FPS: {fps}, Total Frames: {total_frames}")
 
     frame_count = 0
     detection_history = []
@@ -98,8 +102,15 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
         # Save the annotated frame to the output video
         out.write(annotated_frame)
 
+        # **Update the progress bar**
+        progress = frame_count / total_frames
+        progress_bar.progress(progress)
+
         # Display the annotated frame in the Streamlit app
         video_placeholder.image(annotated_frame, channels="BGR", use_container_width=True)
+
+        # Update the information (frame count / total frames)
+        info_placeholder.write(f"Resolution: {frame_width}x{frame_height}, FPS: {fps}, Processed Frames: {frame_count}/{total_frames}")
 
         # Confirm failure only if detected in 3 consecutive frames
         if len(detection_history) >= 3 and sum(detection_history[-3:]) >= 3:
@@ -123,6 +134,7 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
                 file_name="processed_video.mp4",
                 mime="video/mp4"
             )
+
 def main():
     st.title("3D Printing Failure Detection and Prediction")
     model = load_model()
@@ -180,9 +192,6 @@ def main():
 
             # Process video
             process_video(temp_video_path, model)
-
-
-
 
 if __name__ == "__main__":
     main()
