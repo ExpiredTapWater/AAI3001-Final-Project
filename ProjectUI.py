@@ -100,7 +100,7 @@ def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4
 # Main Streamlit app
 def main():
     # Navigation between pages
-    page = st.sidebar.selectbox("Navigation", ["Prediction", "Process Video"])
+    page = st.sidebar.selectbox("Navigation", ["Prediction", "Livestream"])
 
     if page == "Prediction":
         st.title("3D Printing Failure Rate Prediction with YOLO11")
@@ -108,7 +108,7 @@ def main():
 
         # Upload Section for Images
         st.header("Upload an Image of the Print")
-        image_file = st.file_uploader("Upload a .jpg image", type=["jpg"])
+        image_file = st.file_uploader("Upload a .jpg or .png image", type=["jpg", "png"])
 
         if image_file:
             # Display uploaded image
@@ -122,7 +122,7 @@ def main():
             # Display annotated image
             st.image(annotated_image, caption="Prediction with Annotations", use_column_width=True)
 
-    elif page == "Process Video":
+    elif page == "Livestream":
         st.title("3D Printing Failure Detection - Video")
         model = load_model()
 
