@@ -1,79 +1,109 @@
 import streamlit as st
 from PIL import Image
 from ultralytics import YOLO
-import pandas as pd
-import io
+import cv2
 import os
-import ntfy
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+import tempfile
 import requests
 
-# Load the YOLO11 model
+# Load the YOLO model
 def load_model():
-    model_path = r"C:\Users\leena\OneDrive\Documents\Desktop\Deep Learning\Final Project\best.pt"
-    model = YOLO(model_path)  # Load the YOLO11 model using Ultralytics
+    model_path = r"UItest_best.pt"
+    model = YOLO(model_path)  # Load the YOLO model
     return model
 
-# Send notifications using ntfy
-def send_ntfy_notification(topic, title, message):
-    try:
-        response = requests.post(
-            f"https://ntfy.sh/{topic}",
-            headers={"Title": title},
-            data=message
-        )
-        if response.status_code == 200:
-            st.success("Notification sent successfully!")
-        else:
-            st.error(f"Failed to send notification: {response.status_code}")
-    except Exception as e:
-        st.error(f"Error sending notification: {e}")
-        
-# Predict failure rate
-def predict_failure_rate(image, model):
-    # Perform inference
-    results = model.predict(source=image, conf=0.3, save=True)  # Inference with confidence threshold 0.3
+# # Send notifications using ntfy
+# def send_ntfy_notification(topic, title, message):
+#     try:
+#         response = requests.post(
+#             f"https://ntfy.sh/{topic}",
+#             headers={"Title": title},
+#             data=message
+#         )
+#         if response.status_code == 200:
+#             st.success("Notification sent successfully!")
+#         else:
+#             st.error(f"Failed to send notification: {response.status_code}")
+#     except Exception as e:
+#         st.error(f"Error sending notification: {e}")
 
-    # Extract bounding boxes and detection details
-    detections = results[0].boxes  # Access the boxes attribute
-    if detections:
-        # Convert detections to a pandas DataFrame
-        detection_data = []
-        for box in detections:
-            # Extract bounding box coordinates
-            x1, y1, x2, y2 = box.xyxy[0].tolist()  # [x_min, y_min, x_max, y_max]
+# Process video for YOLO detection
+def process_video(video_path, model, confidence_threshold=0.5, iou_threshold=0.4):
+    cap = cv2.VideoCapture(video_path)
 
-            # Extract class and confidence
-            cls = int(box.cls[0])  # Class index
-            conf = box.conf[0].item()  # Confidence score
+    if not cap.isOpened():
+        st.error("Failed to open video file!")
+        return
 
-            # Get the class name from the names dictionary
-            class_name = results[0].names[cls]
+    # Video properties
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-            # Append data for the table
-            detection_data.append([class_name, conf, x1, y1, x2, y2])
+    # Display video properties
+    st.info(f"Video Loaded: {os.path.basename(video_path)}")
+    st.write(f"Resolution: {frame_width}x{frame_height}, FPS: {fps}, Total Frames: {total_frames}")
 
-        # Create a DataFrame for display
-        detection_df = pd.DataFrame(detection_data, columns=["Class", "Confidence", "X1", "Y1", "X2", "Y2"])
-        return detection_df, results
-    else:
-        return None, results  # No detections found
+    # Placeholder for displaying the video frames in Streamlit
+    video_placeholder = st.empty()
 
-# Live stream functionality
-class VideoTransformer(VideoTransformerBase):
-    def transform(self, frame):
-        # Add custom processing here if needed
-        return frame
+    frame_count = 0
+    detection_history = []
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_count += 1
+
+        # Resize frame for YOLO model
+        resized_frame = cv2.resize(frame, (640, 384))
+
+        # Perform YOLO inference
+        results = model.predict(resized_frame, imgsz=(384, 640), conf=confidence_threshold, iou=iou_threshold)
+
+        # Annotate the frame with detections if available
+        annotated_frame = results[0].plot()
+        detections = results[0].boxes
+
+        if detections:
+            for box in detections:
+                cls = int(box.cls[0])
+                class_name = results[0].names[cls]
+                confidence = box.conf[0].item()
+
+                # Apply confidence threshold and filter by class
+                if class_name == "failure" and confidence >= confidence_threshold:
+                    st.write(f"Frame {frame_count}: Detected {class_name} with confidence {confidence:.2f}")
+                    detection_history.append(True)
+                else:
+                    detection_history.append(False)
+
+        # Display the annotated frame in the Streamlit app
+        video_placeholder.image(annotated_frame, channels="BGR", use_column_width=True)
+
+        # # Confirm failure only if detected in 3 consecutive frames
+        # if len(detection_history) >= 3 and sum(detection_history[-3:]) >= 3:
+        #     send_ntfy_notification(
+        #         topic="AAI3001-FinalProj",
+        #         title="3D Printing Failure Detected",
+        #         message=f"Failure detected consistently around frame {frame_count}."
+        #     )
+        #     detection_history = []  # Reset after notification
+
+    cap.release()
+    st.success("Video processing complete.")
+
 
 # Main Streamlit app
 def main():
     # Navigation between pages
-    page = st.sidebar.selectbox("Navigation", ["Prediction", "Live Stream"])
+    page = st.sidebar.selectbox("Navigation", ["Prediction", "Process Video"])
 
     if page == "Prediction":
         st.title("3D Printing Failure Rate Prediction with YOLO11")
-
-        # Load the model once
         model = load_model()
 
         # Upload Section for Images
@@ -81,63 +111,32 @@ def main():
         image_file = st.file_uploader("Upload a .jpg image", type=["jpg"])
 
         if image_file:
-            # Extract the name of the uploaded file (without the extension)
-            input_filename = os.path.splitext(image_file.name)[0]
-
-            # Display the uploaded image
+            # Display uploaded image
             image = Image.open(image_file)
             st.image(image, caption="Uploaded Image", use_column_width=True)
 
-            # Predict button
-            if st.button("Predict Failure Rate"):
-                with st.spinner("Analyzing the image..."):
-                    # Perform failure rate prediction
-                    detection_df, results = predict_failure_rate(image, model)
+            # Perform YOLO inference
+            results = model.predict(source=image, conf=0.3)
+            annotated_image = results[0].plot()
 
-                    if detection_df is not None:
-                        # Display results
-                        st.success("Predictions complete!")
-                        st.write(f"Detected {len(detection_df)} failures.")
-                        
-                        # Show detections as a DataFrame
-                        st.dataframe(detection_df)
+            # Display annotated image
+            st.image(annotated_image, caption="Prediction with Annotations", use_column_width=True)
 
-                        # Annotate and display the image with detections
-                        annotated_image = results[0].plot()  # Annotate predictions on the image
-                        
-                        # Convert the annotated image to a format suitable for download
-                        annotated_image_pil = Image.fromarray(annotated_image)  # Convert annotated image to PIL format
-                        buf = io.BytesIO()
-                        annotated_image_pil.save(buf, format="PNG")
-                        buf.seek(0)
+    elif page == "Process Video":
+        st.title("3D Printing Failure Detection - Video")
+        model = load_model()
 
-                        # Display the annotated image
-                        st.image(annotated_image, caption="Prediction with Annotations", use_column_width=True)
+        # Upload Section for Videos
+        video_file = st.file_uploader("Upload a video file", type=["mp4"])
 
-                        # Send a notification if bad predictions are detected
-                        failure_classes = detection_df["Class"].tolist()
-                        send_ntfy_notification(
-                            topic="AAI3001-FinalProj", # GUYS USE THIS TOPIC
-                            title="Bad Predictions Detected",
-                            message=f"{len(detection_df)} failures detected: {', '.join(failure_classes)}."
-                        )
+        if video_file:
+            # Save uploaded video to a temporary file
+            temp_video_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
+            with open(temp_video_path, "wb") as f:
+                f.write(video_file.read())
 
-                        # Create a download button for the annotated image
-                        st.download_button(
-                            label="Download Prediction Image",
-                            data=buf,
-                            file_name=f"{input_filename}_prediction.png",  # Use input file name for the prediction
-                            mime="image/png"
-                        )
-                    else:
-                        st.warning("No failures detected in the image.")
-    
-    elif page == "Live Stream":
-        st.title("Live Stream of 3D Printing")
-        st.write("Watch the live feed from your connected camera.")
-        
-        # Start the live stream using streamlit-webrtc
-        webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
+            # Process video
+            process_video(temp_video_path, model)
 
 if __name__ == "__main__":
     main()
