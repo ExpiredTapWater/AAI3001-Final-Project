@@ -8,7 +8,7 @@ import requests
 
 # Load the YOLO model
 def load_model():
-    model_path = r"UItest_best.pt"
+    model_path = r"3dprint_yolov11m\train2\weights\best.pt"
     model = YOLO(model_path)  # Load the YOLO model
     return model
 

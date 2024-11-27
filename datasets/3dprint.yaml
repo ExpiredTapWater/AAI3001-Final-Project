@@ -1,9 +1,0 @@
-path:   /kaggle/input/3dprint/3dprint  # dataset root dir
-train:  /kaggle/input/dataset-3dprint/3dprint/images/train         # train images (relative to 'path')  
-val:    /kaggle/input/dataset-3dprint/3dprint/images/val             # val images (relative to 'path')  
-test:   /kaggle/input/dataset-3dprint/3dprint/images/test            # test images (optional, relative to 'path') 
-
-# Classes
-names:
-  0: failure
-
