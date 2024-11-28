@@ -91,7 +91,26 @@ While our model works, and was able to reliably detect similar forms of failure,
    - There might be leftover "purged filament" that fell onto the printbed
 
 **2. If a prints start when there is an object on the bed, it will nearly always end in print and mechanical failure.**
-### Model Development
+### New Model Development
+
+#### Updated Dataset (820 Images)
+Based on the initial testing, we have updated the dataset with 280 more images. These are obtained similarly to the initial dataset, but using seperate camera for another slightly different perspective. These additional images are split into (80:10:10) where xx of xx images have at least one failure in them. The failures simulated are also done using two different methods:
+
+We designed [two files](https://cad.onshape.com/documents/f5fa610d41301785390c590c/w/85f44a550e1a6889dc6a74d6/e/ebb2803dda6e79d8e5a7e7c0?renderMode=0&uiState=6743750fd0d06252d2c72f97) that when printed will result in failure:
+
+- File-1: Unsupported cantiliver. This simulates a spagehetti failure mid-print. This can occur of the print belts skip, or due to a bad design which causes the printer to print "mid-air".
+
+- File-2: Lack of adhesion. This simulates when the print surface is dirty, and the first layer does not stick to it, similar to the initial dataset. The filament will be dragged around a large area.
+
+When researching for methods to improve detection rates, we found Apple's Depth Pro, which is a zero-shot metric monocular depth estimation based on vision transformers. When testing this model, we noticed that it was able to very clearly identify tall objects with ease. As we have discovered with our previous model, our dataset is still extremly limted, and it cannot generalize errors well, such as those of different coloured fillament. By passing our dataset through this model, we can obtain the estimated depth from the camera, and feed the images through our YOLO model.
+
+![Depth Dataset](https://i.ibb.co/D8wXVKc/val-batch0-labels.jpg)
+
+In actual testing however, it performed very poorly, especially when trying to identify purged filament on the build plate. This is because their relative height is very small, making it not stand out. Based on this, we decided the best way forward is to use both a regular YOLO model trained on RGB images, and pass live video feed through Apple's depth pro model, then feed it to a depth trained YOLO model.
+
+Here is an example of the combined model in action:
+![GIF](https://github.com/ExpiredTapWater/AAI3001-Final-Project/blob/main/demo_videos/side-by-side-gif.gif?raw=true)
+
 
 ### Model Deployment
 
