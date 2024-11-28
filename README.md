@@ -38,7 +38,7 @@
 
 <img src="https://i.ytimg.com/vi/zbCap3a_tFA/maxresdefault.jpg" width="600px">
 
-**An example of a failure. The left image shows a 'spaghetti' failure, and the right image is a clogged nozzle causing a['blob of death'](https://docs.vorondesign.com/community/troubleshooting/120decibell/blob_of_death.html)**
+**An example of a failure. The left image shows a 'spaghetti' failure, and the right image is a clogged nozzle causing a ['blob of death'](https://docs.vorondesign.com/community/troubleshooting/120decibell/blob_of_death.html)**
 
 ![Failure](https://i.ibb.co/bBnCPhT/Screenshot-2024-11-28-130358.jpg)
 
