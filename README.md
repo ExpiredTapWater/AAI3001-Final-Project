@@ -65,8 +65,24 @@ As the camera is located inside the printer, except for different lighting condi
 Using this knowledge, we will attempt to train a simple model using YOLO to detect print failures, and determine if there are further opportunities to explore
 
 # Methodology and Proposed Solution
-TODO
-### Dataset
+We will detail how we went about obtaining our dataset
+
+#### Initial Dataset (350 Images)
+Our initial dataset consists of 350 Images. These are recorded from the 3D printer's built in webcam. We obtain our images as snapshots from a mix of timelapse and regular videos. These have been roughly split into 65:25:10 (train/val/test), of these, 157 have at least one failure in them, and the remaining are background images.
+
+- #### Timelapse Videos
+These captures movement across the entire print cycle, and are representative of an entire print, which takes more than an hour on averages. Frames are captured at the start of each layer, where each layer is 0.2mm in height. Therefore an object of 1cm will have 5 frames captures. However, a shortfall of this method is key moments, such as the start of a print failure occuring might get missed if they do not occur at the start of the new layer.
+
+- #### Regular Videos
+These captures movement across a specific moment in the print cycle. We record the entire footage and pick out key moments. We use this to capture the initial moments where the print failure occurs. As this is a regular 30FPS video, we are able to capture more frames and populate our dataset with these key moments. As 30FPS will generate too many similar images, we record them in a 15:1 ratio (We capture one frame for every 15 frame of video). This is till much faster than timelapse, which might only capture a single image every 2+ mins.
+
+Unfortunately, we were unable to organically capture an actual failure. Hence we have to simulate one. In particular, we will focus on ["spaghetti"](https://help.prusa3d.com/article/spaghetti-monster_1999) failures, which are the most common form of failure that has no recovery. I.e. encountering one will result in the print having to be completely discarded and restarted.
+
+The failures from this initial dataset is simulated by printing a very thin but tall object. When it inevitably falls over, filament will get dragged everywhere.
+
+**Here is an sample of our annotated initial dataset**
+
+![Initial Dataset](https://i.ibb.co/VmKsFjV/Screenshot-2024-11-28-132652.jpg)
 
 ### Model Development
 
