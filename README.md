@@ -84,6 +84,13 @@ The failures from this initial dataset is simulated by printing a very thin but 
 
 ![Initial Dataset](https://i.ibb.co/VmKsFjV/Screenshot-2024-11-28-132652.jpg)
 
+While our model works, and was able to reliably detect similar forms of failure, we felt that we did not bring anything new to this area of application. As such, we decided to shift our focus towards **Print Bed Foriegn Object Detection**. Here, we attempt to develop a model to reliably detect objects on the print surface before a print starts. This is important for several reasons:
+
+**1. Current 3D Printers do not have a way to check if the print bed is clear before starting**
+   - The user might have forgotten to remove a print after is completed
+   - There might be leftover "purged filament" that fell onto the printbed
+
+**2. If a prints start when there is an object on the bed, it will nearly always end in print and mechanical failure.**
 ### Model Development
 
 ### Model Deployment
