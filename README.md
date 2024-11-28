@@ -30,3 +30,24 @@
 - **Streamlit UI** `streamlit run ProjectUI.py`
 - **Single Model Demo** `python livepredict-single.py`
 - **Dual Model Demo** `python livepredict-dual.py`
+- **Stream OpenCV Footage (Only works for ChenYi)** `python livepredict-single-flask.py`
+
+# Introduction and Problem Statement
+TODO
+
+# Research Questions and Project Objectives
+TODO
+
+# Methodology and Proposed Solution
+TODO
+### Dataset
+
+### Model Development
+
+### Model Deployment
+
+### User Interface
+PUT SCREENSHOTS HERE
+
+# Experiments and Results Analysis
+TODO
