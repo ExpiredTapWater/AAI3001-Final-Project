@@ -18,6 +18,7 @@
 | `demo_videos`          | Contains backup demo videos, as well as raw footage to upload and test on UI                                      |
 | `depth_pro`            | Contains required files to run [Apple's model](https://github.com/apple/ml-depth-pro/tree/main)                   |
 | `utilities`            | Contains helper functions to split dataset, and other unused test functions               |
+| `app`                  | Contains streamlit UI files|
 
 ### Required Stuff
 **Install these python libraries:**
@@ -28,10 +29,10 @@
    - *Optional: Please download the Apple Depth Pro mode from this [link](https://sitsingaporetechedu-my.sharepoint.com/:u:/g/personal/2302822_sit_singaporetech_edu_sg/EarUQsqcFjhBle4mf87DVD4BuVpA4PcqrSdIr7X4MDN9hg?e=EZ8QTb), and extract it to the checkpoints folder.*
 
 ### Running
-- **Streamlit UI** `streamlit run ProjectUI.py`
+- **Streamlit UI** `streamlit run /app/home.py`
 - **Single Model Demo** `python livepredict-single.py`
 - **Dual Model Demo** `python livepredict-dual.py`
-- **Stream OpenCV Footage (Only works for ChenYi)** `python livepredict-single-flask.py`
+- **Stream OpenCV Footage (Only works for ChenYi as camera is local)** `python livepredict-single-flask.py`
 
 # Introduction and Problem Statement
 3D prints might take a few minutes, or several days to complete. The idea of using a camera to remotely monitor prints stems from this. Nearly all 3D printers on the market now have built-in cameras for the remote monitoring of 3D prints. It offers users a piece of mind through the ability to monitor their from wherever they are.
@@ -130,6 +131,8 @@ Our original objective would be to provide a platform where users could either s
 **This raw stream can then be viewed from any compatible player, for example, from HomeAssistant, demonstrated here:**
 
 ![HA UI](https://i.ibb.co/QkdbRgq/Screenshot-2024-11-30-125043.jpg)
+
+Adding an automatic pause function will be trivial, such as by checking a seperate webpage for the output, and sending a stop command via an [MQTT wrapper library](https://github.com/greghesp/ha-bambulab) for this line of 3D printers.
 
 # Experiments and Results Analysis
 TODO
