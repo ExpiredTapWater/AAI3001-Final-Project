@@ -108,14 +108,28 @@ When researching for methods to improve detection rates, we found Apple's Depth 
 
 In actual testing however, it performed very poorly, especially when trying to identify purged filament on the build plate. This is because their relative height is very small, making it not stand out. Based on this, we decided the best way forward is to use both a regular YOLO model trained on RGB images, and pass live video feed through Apple's depth pro model, then feed it to a depth trained YOLO model.
 
-Here is an example of the combined model in action:
+**Here is an example of the combined model in action:**
+
 ![GIF](https://github.com/ExpiredTapWater/AAI3001-Final-Project/blob/main/demo_videos/side-by-side-gif.gif?raw=true)
 
 
 ### Model Deployment
+We host a streamlit application on one of our member's desktop, with support for GPU acceleration. To replicate a full web hosted service without actually exposing any ports to the internet, we use a combination of a VPN service, local DNS server, reverse proxy and a free domain ("local.diskstation.me") with an SSL cert. Thus once connected, any user will be able to directly access the serice at "aai3001.local.diskstation.me". Users can upload their images and it will return the model's prediction. If a failure is detected, a notification will be sent to a user's phone via the 'ntfy' service. 
 
-### User Interface
-PUT SCREENSHOTS HERE
+**Below is a screenshot of the interface:**
+
+![UI](https://i.ibb.co/kHTqPf4/Screenshot-2024-11-30-124520.jpg)
+
+Our original objective would be to provide a platform where users could either stream their webcam footage, or provide a IP address to a camera stream. This is because most camera equiped 3D printers stream via IP, such as via the RTSP protocol. However, we were unable to get this feature working in time for submission, thus we had to run another seperate flask app to obtain the annotated feed from opencv using `python livepredict-single-flask.py`. 
+
+**Below is a screenshot of this funtion:**
+
+![Raw UI](https://i.ibb.co/GCwd3mp/Screenshot-2024-11-30-124736.jpg)
+
+
+**This raw stream can then be viewed from any compatible player, for example, from HomeAssistant, demonstrated here:**
+
+![HA UI](https://i.ibb.co/QkdbRgq/Screenshot-2024-11-30-125043.jpg)
 
 # Experiments and Results Analysis
 TODO
