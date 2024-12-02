@@ -140,7 +140,7 @@ Adding an automatic pause function will be trivial, such as by checking a sepera
 
 The model trained on the regular dataset peforms very well when tested using similar looking objects. It is able to reliably detect multiple instances of all classes at once without issue. However, when tested with an object of the same colour but different shape, it fails to identify them reliably, showing issues with generalisation. This is likely due to our limited dataset, where we were unable to train it against a range of materials with different colours and shape.
 
-In response to this, we attempted to perform data transformation by passing our dataset through the Apple Depth Pro monocular vision model, and training the model on those images, based on the idea that the depth transformation highlights large objects clearly regardless of shape and colour, which should allow the model to generalise better.
+In response to this, we attempted to perform data transformation by passing our dataset through the Apple Depth Pro monocular vision model, and training the model on those images, based on the idea that the depth transformation highlights large objects clearly regardless of shape and colour, which should allow the model to generalise better. However, this implementation did not work out in the end, and a combined approach using two models was implemented instead.
 
 #### Analysis
 
