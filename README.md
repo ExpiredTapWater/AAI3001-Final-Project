@@ -136,13 +136,13 @@ Adding an automatic pause function will be trivial, such as by checking a sepera
 
 # Experiments and Results Analysis
 
-**Summary**
+#### Summary
 
 The model trained on the regular dataset peforms very well when tested using similar looking objects. It is able to reliably detect multiple instances of all classes at once without issue. However, when tested with an object of the same colour but different shape, it fails to identify them reliably, showing issues with generalisation. This is likely due to our limited dataset, where we were unable to train it against a range of materials with different colours and shape.
 
 In response to this, we attempted to perform data transformation by passing our dataset through the Apple Depth Pro monocular vision model, and training the model on those images, based on the idea that the depth transformation highlights large objects clearly regardless of shape and colour, which should allow the model to generalise better.
 
-**Analysis**
+#### Analysis
 
 **We first look at the results from the model trained on the regular dataset**
 
@@ -156,5 +156,9 @@ In response to this, we attempted to perform data transformation by passing our 
 | **Purge**  | 1      | 5         | 0.518         | 0.600      | 0.548  | 0.125     |
 | **Print**  | 11     | 17        | 0.952         | 1.000      | 0.995  | 0.823     |
 
-We can see that print, which are the largest objects, and have the largest ground truth boxes, are reliably and accurately detected. Ideally the other two classes should follow the same curve, but they do not. There are also some misclassifications of background images where the model thinks there are objects within. The largest issue can be seen with the lack of ability to generalise. mAP50 for the print class is very high at 0.995 with 0.952 precision. However it when we switch objects in the live test, it fails to detect objects of the same colour but in a slighly different shape (H-shaped to L-shaped for example)
+We can see that print, which are the largest objects, and have the largest ground truth boxes, are reliably and accurately detected. Ideally the other two classes should follow the same curve, but they do not. There are also some misclassifications of background images where the model thinks there are objects within. The largest issue can be seen with the lack of ability to generalise. mAP50 for the print class is very high at 0.995 with 0.952 precision. However it when we switch objects in the live test, it fails to detect objects of the same colour but in a slighly different shape (H-shaped to L-shaped for example). There is also an issue with the random spliting of images using the ultralytics `autosplit` library, which did resulted in only a single image of the purge class being added into the test dataset.
 
+![Depth-1](https://raw.githubusercontent.com/ExpiredTapWater/AAI3001-Final-Project/refs/heads/main/3dprint_depthpro_yolov11m/test/F1_curve.png)
+![Depth-2](https://raw.githubusercontent.com/ExpiredTapWater/AAI3001-Final-Project/refs/heads/main/3dprint_depthpro_yolov11m/test/confusion_matrix.png)
+
+Our model trained on the depth dataset performed very poorly. It could not identify a single instace of the purge class. This shows that this method of data transformation to detect purges, and by extension failures and prints, might not be the best application. With the very high inference time due to the overhead of running the depth model then yolo inference sequentially, this might not be the best method to improve accuracy. We can can only push ~2FPS vs ~20+FPS for the regular YOLO model. 
